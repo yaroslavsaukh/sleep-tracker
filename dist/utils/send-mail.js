@@ -12,27 +12,35 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addNumber = void 0;
-const twilio_1 = __importDefault(require("twilio"));
+exports.sendMail = void 0;
 const http_errors_1 = __importDefault(require("http-errors"));
-const addNumber = () => __awaiter(void 0, void 0, void 0, function* () {
-    const accountSid = process.env.TWILIO_ACCOUNT_SID;
-    const authToken = process.env.TWILIO_AUTH_TOKEN;
-    const client = (0, twilio_1.default)(accountSid, authToken);
+const nodemailer_1 = __importDefault(require("nodemailer"));
+const sendMail = ({ subject, to, text }) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        // Download the helper library from https://www.twilio.com/docs/node/install
-        // Find your Account SID and Auth Token at twilio.com/console
-        // and set the environment variables. See http://twil.io/secure
-        client.validationRequests
-            .create({
-            friendlyName: 'My Home Phone Number',
-            phoneNumber: '+14158675310',
-        })
-            .then((validation_request) => console.log(validation_request.friendlyName));
+        const transporter = nodemailer_1.default.createTransport({
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true,
+            auth: {
+                user: process.env.MAIL_MAIL,
+                pass: process.env.MAIL_API_KEY,
+            },
+        });
+        const recipients = to.join(', ');
+        const result = yield transporter.sendMail({
+            from: {
+                name: 'Sleep Tracker',
+                address: `${process.env.MAIL_MAIL}`,
+            },
+            to: recipients,
+            subject,
+            text,
+        });
+        return result;
     }
     catch (e) {
         console.log(e);
-        throw (0, http_errors_1.default)(404, 'Error while sending code');
+        throw (0, http_errors_1.default)(500, 'Error while sending email');
     }
 });
-exports.addNumber = addNumber;
+exports.sendMail = sendMail;

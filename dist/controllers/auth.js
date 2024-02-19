@@ -12,16 +12,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPassword = exports.forgotPassword = exports.list = exports.login = exports.register = void 0;
+exports.resetPassword = exports.forgotPassword = exports.login = exports.register = void 0;
 const User_1 = __importDefault(require("../db/models/User"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const http_errors_1 = __importDefault(require("http-errors"));
 const token_1 = __importDefault(require("../middleware/token"));
 const generate_code_1 = require("../utils/generate-code");
-const send_code_1 = require("../utils/send-code");
-const add_number_1 = require("../utils/add-number");
+const send_mail_1 = require("../utils/send-mail");
 const register = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        // #swagger.tags = ['Auth']
         const { name, email, gender, password, birthday, phone } = req.body;
         const existingUser = yield User_1.default.findOne({ email });
         if (existingUser)
@@ -40,7 +40,7 @@ const register = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
             name: user.name,
             email: user.email,
         });
-        res.status(200).json(accessToken);
+        res.status(200).json({ token: accessToken });
     }
     catch (e) {
         next(e);
@@ -48,6 +48,7 @@ const register = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.register = register;
 const login = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    // #swagger.tags = ['Auth']
     try {
         const { email, password } = req.body;
         if (!password || !email) {
@@ -75,25 +76,16 @@ const login = (req, res, next) => __awaiter(void 0, void 0, void 0, function* ()
             name: user.name,
             email: user.email,
         });
-        res.status(200).json(accessToken);
+        res.status(200).json({ token: accessToken });
     }
     catch (e) {
         next(e);
     }
 });
 exports.login = login;
-const list = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const list = yield User_1.default.find();
-        res.status(200).json(list);
-    }
-    catch (e) {
-        next(e);
-    }
-});
-exports.list = list;
 const forgotPassword = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        // #swagger.tags = ['Auth']
         const { phone, email } = req.body;
         if (phone) {
             const user = yield User_1.default.findOne({ phone });
@@ -104,14 +96,28 @@ const forgotPassword = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
                 });
             }
             const resetCode = (0, generate_code_1.generateRandomCode)();
-            yield (0, add_number_1.addNumber)();
+            // await addNumber();
             yield user.updateOne({ code: resetCode });
-            yield (0, send_code_1.sendCode)(resetCode, phone);
-            res.status(200).json('Sms sended successfully');
+            // await sendCode(resetCode, phone);
+            console.log(resetCode);
+            // res.status(200).json({ message: 'Sms sended successfully' });
+            res.status(200).json({ code: resetCode });
         }
         else {
             const user = yield User_1.default.findOne({ email });
-            res.status(200).json(user);
+            if (!user) {
+                throw (0, http_errors_1.default)(404, {
+                    message: 'Cannot find user with provided email',
+                    code: 'login - missing user with provided email',
+                });
+            }
+            const resetCode = (0, generate_code_1.generateRandomCode)();
+            yield (0, send_mail_1.sendMail)({
+                subject: 'Password reset',
+                to: [email],
+                text: `Your reset code ${resetCode}`,
+            });
+            res.status(200).json({ code: resetCode });
         }
     }
     catch (e) {
@@ -121,6 +127,7 @@ const forgotPassword = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
 exports.forgotPassword = forgotPassword;
 const resetPassword = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        // #swagger.tags = ['Auth']
         const { email, phone, resetCode, newPassword } = req.body;
         const user = yield User_1.default.findOne({ phone });
         if ((user === null || user === void 0 ? void 0 : user.code) !== resetCode) {
