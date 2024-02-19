@@ -10,8 +10,17 @@ export const list = async (req: Request, res: Response, next: NextFunction) => {
             "bearerAuth": []
     }] */
   try {
-    const list = await User.find();
-    res.status(200).json({ list });
+    const {limit, offset} = req.query
+
+    const limitNumber = parseInt(limit as string, 10);
+    const offsetNumber = parseInt(offset as string, 10);
+
+    const list = await User.find().limit(limitNumber)
+    .skip(limitNumber * offsetNumber);
+
+    const count = list.length
+
+    res.status(200).json({ list, count });
   } catch (e: any) {
     next(e);
   }
