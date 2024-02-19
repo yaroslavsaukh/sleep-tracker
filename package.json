@@ -9,7 +9,7 @@
     "start": "node dist/index.js",
     "dev": "nodemon index.ts",
     "swagger": "node swagger/swagger.js",
-    "pm2": " pm2 start ts-node index.ts"
+    "pm2": "npx tsc && pm2 start dist/index.js --name sleep-tracker"
   },
   "keywords": [],
   "author": "",

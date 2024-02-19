@@ -6,7 +6,6 @@ import cors from 'cors';
 import { errorHandler } from './middleware/error-handler';
 import swaggerAutogen from 'swagger-autogen';
 import swaggerUi from 'swagger-ui-express';
-const swaggerDocument = require('./swagger/swagger-output.json');
 dotenv.config();
 
 const app: Express = express();
@@ -17,7 +16,11 @@ try {
   app.use(cors());
   app.use(express.json());
   app.use('/api', apiRouter);
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+  if(process.env.NODE_ENV !=='production'){
+    const swaggerDocument = require('./swagger/swagger-output.json');
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  }
   app.use(errorHandler);
 } catch (e) {
   console.log(e);

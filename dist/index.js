@@ -10,7 +10,6 @@ const routes_1 = require("./routes");
 const cors_1 = __importDefault(require("cors"));
 const error_handler_1 = require("./middleware/error-handler");
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
-const swaggerDocument = require('./swagger/swagger-output.json');
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const port = process.env.PORT || 3000;
@@ -19,7 +18,10 @@ try {
     app.use((0, cors_1.default)());
     app.use(express_1.default.json());
     app.use('/api', routes_1.apiRouter);
-    app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swaggerDocument));
+    if (process.env.NODE_ENV !== 'production') {
+        const swaggerDocument = require('./swagger/swagger-output.json');
+        app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swaggerDocument));
+    }
     app.use(error_handler_1.errorHandler);
 }
 catch (e) {

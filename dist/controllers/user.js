@@ -21,8 +21,13 @@ const list = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () 
               "bearerAuth": []
       }] */
     try {
-        const list = yield User_1.default.find();
-        res.status(200).json({ list });
+        const { limit, offset } = req.query;
+        const limitNumber = parseInt(limit, 10);
+        const offsetNumber = parseInt(offset, 10);
+        const list = yield User_1.default.find().limit(limitNumber)
+            .skip(limitNumber * offsetNumber);
+        const count = list.length;
+        res.status(200).json({ list, count });
     }
     catch (e) {
         next(e);
