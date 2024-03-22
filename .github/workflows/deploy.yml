@@ -10,13 +10,12 @@ jobs:
     runs-on: centos-latest
 
     steps:
-      -uses: actions/checkout@v3
-      -name: deploying application to EC2
-       env:
-        PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY  }}
-        HOSTNAME: ${{ secrets.SERVER_HOST  }}
-        USER_NAME: ${{ secrets.SERVER_USERNAME  }}
+      - uses: actions/checkout@v3
+      - name: deploying application to EC2
+        env:
+          PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY  }}
+          HOSTNAME: ${{ secrets.SERVER_HOST  }}
+          USER_NAME: ${{ secrets.SERVER_USERNAME  }}
 
         run: |
           ssh ${USER_NAME}@${HOSTNAME} touch test.txt
-
