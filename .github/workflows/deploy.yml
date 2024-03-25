@@ -21,4 +21,4 @@ jobs:
             git pull origin staging
             git status
             npm i
-            pm2 restart all
+            pm2 stop all
