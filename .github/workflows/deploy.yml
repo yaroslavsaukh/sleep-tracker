@@ -1,22 +1,24 @@
-name: GitHub Actions Demo
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+name: Deploy
 on:
   push:
     branches: ["staging"]
 
 jobs:
-  delpoy:
+  build:
     name: Deploying Node.js
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - name: deploying application to EC2
-        env:
-          PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY  }}
-          HOSTNAME: ${{ secrets.SERVER_HOST  }}
-          USER_NAME: ${{ secrets.SERVER_USERNAME  }}
-
-        run: |
-          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} touch test.txt
+      - name: Deploy using ssh
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{secrets.HOST}}
+          username: ${{secrets.SERVER_USERNAME}}
+          key: ${{secrets.SERVER_SSH_KEY}}
+          port: 22
+          script: |
+            cd /projects/test-deploy/
+            git pull origin staging
+            git status
+            npm i
+            pm2 restart all
